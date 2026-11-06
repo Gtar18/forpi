@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>น้องมีอะไรจะบอก 💌</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600&family=Sriracha&display=swap" rel="stylesheet">
+<style>
+/* ========== แก้ข้อความตรงนี้ได้ใน CONFIG ด้านล่าง (ในแท็ก script) ========== */
+:root{
+  --paper:#FBFBF6; --line:#C9DAF2; --margin:#E98585; --ink:#28357F;
+  --ink-soft:#5B66A8; --hl:#FFE36E; --heart:#EE4F84; --btn-ink:#FBFBF6;
+  color-scheme: light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#1A2133; --line:#2A3654; --margin:#7A3D52; --ink:#E6EAF8;
+    --ink-soft:#A7B0D6; --hl:#7A6A1E; --heart:#FF6F9C; --btn-ink:#1A2133;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#1A2133; --line:#2A3654; --margin:#7A3D52; --ink:#E6EAF8;
+  --ink-soft:#A7B0D6; --hl:#7A6A1E; --heart:#FF6F9C; --btn-ink:#1A2133;
+  color-scheme: dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;height:100%;overflow:hidden;
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(90deg, transparent 46px, var(--margin) 46px, var(--margin) 48px, transparent 48px),
+    repeating-linear-gradient(to bottom, transparent 0 33px, var(--line) 33px 34px);
+  color:var(--ink);
+  font-family:"Mali","Sriracha",system-ui,sans-serif;
+  font-size:18px;line-height:34px;
+  -webkit-tap-highlight-color:transparent;
+}
+main{height:100%;position:relative}
+.scene{
+  position:absolute;inset:0;display:none;flex-direction:column;
+  justify-content:center;padding:24px 22px 24px 64px;max-width:560px;margin:0 auto;
+}
+.scene.on{display:flex}
+h1,h2{font-family:"Sriracha","Mali",cursive;font-weight:400;margin:0 0 8px}
+h1{font-size:40px;line-height:48px}
+h2{font-size:28px;line-height:34px}
+p{margin:0 0 0}
+.soft{color:var(--ink-soft)}
+mark{background:linear-gradient(transparent 55%, var(--hl) 55%);color:inherit;padding:0 2px}
+button{
+  font:inherit;font-family:"Sriracha","Mali",cursive;font-size:20px;
+  color:var(--btn-ink);background:var(--ink);border:0;
+  border-radius:14px 18px 12px 20px / 18px 12px 20px 14px;
+  padding:8px 22px;margin-top:20px;cursor:pointer;align-self:flex-start;
+  box-shadow:3px 3px 0 var(--heart);
+  transition:transform .15s;
+}
+button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--heart)}
+button:focus-visible{outline:3px dashed var(--heart);outline-offset:4px}
+button.ghost{background:transparent;color:var(--ink);box-shadow:none;border:2px solid var(--ink)}
+
+/* folded note */
+.note{
+  width:200px;height:140px;align-self:center;margin:12px 0 20px;
+  background:var(--paper);border:2px solid var(--ink);position:relative;cursor:pointer;
+  transform:rotate(-4deg);border-radius:4px;
+}
+.note::before{content:"";position:absolute;left:0;right:0;top:0;height:70px;
+  border-bottom:2px dashed var(--ink-soft)}
+.note span{position:absolute;inset:0;display:grid;place-items:center;font-size:40px}
+.note:hover{transform:rotate(2deg)}
+
+/* hearts game */
+#field{position:absolute;inset:0;overflow:hidden;touch-action:manipulation}
+.h{position:absolute;font-size:44px;line-height:1;background:none;border:0;padding:6px;margin:0;
+  box-shadow:none;color:var(--heart);cursor:pointer;animation:rise linear forwards}
+.h:active{transform:none;box-shadow:none}
+@keyframes rise{from{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-55vh) rotate(8deg)}to{transform:translateY(-115vh) rotate(-8deg)}}
+.pop{animation:pop .35s forwards!important}
+@keyframes pop{to{transform:scale(1.8);opacity:0}}
+#hud{position:absolute;top:16px;left:64px;right:16px;z-index:2;pointer-events:none}
+.tally{font-family:"Sriracha",cursive;font-size:26px;letter-spacing:4px}
+
+/* quiz */
+.choices{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.choices button{margin:0;align-self:stretch;text-align:left;background:transparent;color:var(--ink);
+  border:2px solid var(--ink);box-shadow:none;font-family:"Mali",cursive;font-size:18px}
+.choices button:active{background:var(--hl)}
+.reply{min-height:34px;margin-top:12px;color:var(--heart)}
+
+/* letter */
+#letter p{white-space:pre-wrap;min-height:34px}
+.caret{display:inline-block;width:2px;height:22px;background:var(--ink);vertical-align:middle;animation:blink .8s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.sign{font-family:"Sriracha",cursive;font-size:24px;margin-top:8px;text-align:right}
+
+/* ask */
+.row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;min-height:90px;position:relative}
+#no{position:relative;transition:left .25s, top .25s, transform .25s}
+
+.big-heart{font-size:90px;line-height:100px;align-self:center;animation:beat 1s ease-in-out infinite}
+@keyframes beat{50%{transform:scale(1.12)}}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.01ms!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<main>
+
+  <!-- 0. intro -->
+  <section class="scene on" id="s-intro">
+    <h1 id="intro-title">มีโน้ตมาให้</h1>
+    <p class="soft" id="intro-sub"></p>
+    <div class="note" role="button" tabindex="0" aria-label="เปิดโน้ต" id="note"><span>💌</span></div>
+    <p class="soft">แตะโน้ตเพื่อเปิด</p>
+  </section>
+
+  <!-- 1. catch hearts -->
+  <section class="scene" id="s-hearts" style="justify-content:flex-start;padding:0">
+    <div id="hud">
+      <h2>ด่าน 1 · เก็บของกินให้พี่</h2>
+      <p class="soft">แตะไก่ทอด เค้ก ไอติมที่ลอยขึ้นมาให้ครบ <span id="need"></span> ชิ้น</p>
+      <p class="tally" id="tally"></p>
+    </div>
+    <div id="field"></div>
+  </section>
+
+  <!-- 2. quiz -->
+  <section class="scene" id="s-quiz">
+    <p class="soft" id="q-count"></p>
+    <h2 id="q-text"></h2>
+    <div class="choices" id="q-choices"></div>
+    <p class="reply" id="q-reply" aria-live="polite"></p>
+  </section>
+
+  <!-- 3. letter -->
+  <section class="scene" id="s-letter">
+    <h2 id="letter-to"></h2>
+    <div id="letter" aria-live="polite"></div>
+    <p class="sign" id="letter-sign" style="opacity:0"></p>
+    <button id="to-ask" style="display:none">อ่านจบแล้ว</button>
+  </section>
+
+  <!-- 4. ask -->
+  <section class="scene" id="s-ask">
+    <h1 id="ask-q"></h1>
+    <div class="row">
+      <button id="yes"></button>
+      <button class="ghost" id="no"></button>
+    </div>
+  </section>
+
+  <!-- 5a. yes -->
+  <section class="scene" id="s-yes">
+    <div class="big-heart" aria-hidden="true">💗</div>
+    <h1 id="yes-title"></h1>
+    <p id="yes-text"></p>
+  </section>
+
+  <!-- 5b. no -->
+  <section class="scene" id="s-no">
+    <h2 id="no-title"></h2>
+    <p id="no-text"></p>
+  </section>
+
+</main>
+
+<script>
+/* ================== CONFIG — แก้ข้อความได้ตรงนี้ ================== */
+const CONFIG = {
+  to:   "พี่",            // ชื่อคนที่จะส่งให้
+  from: "น้อง",            // ชื่อเรา
+  introSub: "น้องทำเกมมาให้ เล่นให้จบนะ ห้ามกดปิดกลางทาง 😤",
+  heartsNeeded: 7,
+  notifyTopic: "nong-sorry-k7q2x9", // ชื่อหัวข้อในแอป ntfy ที่จะเด้งแจ้งเตือน (เว้นว่าง "" = ปิด)
+  quiz: [
+    { q: "ของกินที่พี่ชอบที่สุดคืออะไร",
+      choices: ["ไก่ทอด", "เค้ก", "ปลาไหล", "ไอติม"],
+      reply: "ถูกหมดเลย น้องจำได้นะ ไม่ได้ลืม 😎" },
+    { q: "ช่วงนี้น้องเป็นน้องที่ดีไหม",
+      choices: ["ดีมาก", "ก็งั้น ๆ", "หายไปไหนมา"],
+      reply: "ไม่ต้องตอบก็รู้... หายไปนานจริง ๆ" },
+    { q: "ถ้าน้องพาไปกินไก่ทอด จะหายงอนไหม",
+      choices: ["หาย", "ต้องมีเค้กด้วย", "ปลาไหลด้วยสิ", "ปิดท้ายด้วยไอติม"],
+      reply: "ได้หมด จัดให้ครบทั้งคาวทั้งหวาน ไอติมด้วย (กระเป๋าตังค์น้องร้องไห้แล้ว)" }
+  ],
+  letter: [
+    "ตอนแรกน้องแค่อยากเป็นความสบายใจให้พี่",
+    "แต่รู้ตัวว่าทำได้ไม่ดีพอ มัวแต่ทำงาน ไม่ค่อยได้ทักไปหาเลย",
+    "ขอโทษนะพี่ ขอโทษจริง ๆ",
+    "น้องอยากกลับมาดีกันเหมือนเดิม",
+    "ถึงพี่ยังไม่อยากกลับมาตอนนี้ก็ไม่เป็นไร น้องก็จะคอยทักไปอยู่นั่นแหละ ไล่ไม่ไปหรอก 😁",
+    "ถึงพี่จะไม่อยากให้น้องเลี้ยง แต่น้องก็ยังอยากพาพี่ไปกินของที่พี่ชอบอยู่ดีนะ",
+    "เพราะน้องอยากเห็นพี่มีความสุขที่สุดแล้ว 💗"
+  ],
+  askQuestion: "ไปเดินเล่น แล้วไปกินของที่พี่ชอบกันไหม เด็กอ้วนคนนี้หิวแล้ว 😁",
+  yesLabel: "ไปสิ",
+  noLabel:  "ยังไม่หายงอน",
+  noDodges: 3,             // ปุ่ม "ไม่" จะหลบกี่ครั้งก่อนกดได้ (ใส่ 0 = กดได้เลย)
+  yesTitle: "ขอบคุณนะพี่",
+  yesText:  "ขอบคุณมาก ๆ จริง ๆ อดทนกับเด็กคนนี้หน่อยนะ งอแงเยอะหน่อย เวลาก็ไม่ค่อยดี แต่ขอบคุณนะที่ยังอยู่ด้วยกัน 💗",
+  noTitle:  "โอเค ไม่เป็นไร",
+  noText:   "น้องรอได้ แต่บอกไว้ก่อนว่าจะทักไปเรื่อย ๆ อยู่ดีนะ 😁 ขอบคุณที่เล่นจนจบ"
+};
+/* ================================================================ */
+
+const $ = id => document.getElementById(id);
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function go(id){
+  document.querySelectorAll(".scene").forEach(s=>s.classList.remove("on"));
+  $(id).classList.add("on");
+}
+
+/* intro */
+$("intro-title").textContent = `มีโน้ตมาให้${CONFIG.to}`;
+$("intro-sub").textContent = CONFIG.introSub;
+function openNote(){ go("s-hearts"); startHearts(); }
+$("note").addEventListener("click", openNote);
+$("note").addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();openNote();} });
+
+/* hearts */
+let caught = 0, spawner = null;
+const need = CONFIG.heartsNeeded;
+$("need").textContent = need;
+function drawTally(){ $("tally").textContent = "♥".repeat(caught) + "♡".repeat(need-caught); }
+function startHearts(){
+  drawTally();
+  const field = $("field");
+  spawner = setInterval(()=>{
+    const h = document.createElement("button");
+    h.className = "h"; h.textContent = ["🍗","🍰","🍦"][Math.floor(Math.random()*3)]; h.setAttribute("aria-label","ของกิน");
+    h.style.left = (8 + Math.random()*76) + "%";
+    h.style.bottom = "-60px";
+    h.style.animationDuration = (reduce ? 6 : 3.2 + Math.random()*2.2) + "s";
+    h.addEventListener("pointerdown", e=>{
+      e.preventDefault();
+      if(h.dataset.hit) return;
+      h.dataset.hit = 1; h.classList.add("pop");
+      caught++; drawTally();
+      setTimeout(()=>h.remove(), 350);
+      if(caught >= need){ clearInterval(spawner); setTimeout(()=>{ field.innerHTML=""; go("s-quiz"); showQ(0); }, 500); }
+    });
+    h.addEventListener("animationend", ()=>{ if(!h.dataset.hit) h.remove(); });
+    field.appendChild(h);
+  }, 650);
+}
+
+/* quiz */
+const answers = [];
+function showQ(i){
+  const item = CONFIG.quiz[i];
+  if(!item){ go("s-letter"); writeLetter(); return; }
+  $("q-count").textContent = `ด่าน 2 · คำถามที่ ${i+1} จาก ${CONFIG.quiz.length}`;
+  $("q-text").textContent = item.q;
+  $("q-reply").textContent = "";
+  const box = $("q-choices"); box.innerHTML = "";
+  item.choices.forEach(c=>{
+    const b = document.createElement("button"); b.textContent = c;
+    b.onclick = ()=>{
+      answers.push(`${item.q} → ${c}`);
+      box.querySelectorAll("button").forEach(x=>x.disabled=true);
+      $("q-reply").textContent = item.reply;
+      setTimeout(()=>showQ(i+1), 1500);
+    };
+    box.appendChild(b);
+  });
+}
+
+/* letter — the one orchestrated moment */
+async function writeLetter(){
+  $("letter-to").textContent = `ถึง ${CONFIG.to}`;
+  const box = $("letter"); box.innerHTML = "";
+  const caret = document.createElement("span"); caret.className = "caret";
+  for(const line of CONFIG.letter){
+    const p = document.createElement("p"); box.appendChild(p);
+    const txt = document.createTextNode(""); p.appendChild(txt); p.appendChild(caret);
+    const chars = (window.Intl && Intl.Segmenter)
+      ? Array.from(new Intl.Segmenter("th", {granularity:"grapheme"}).segment(line), s => s.segment)
+      : (line.match(/.[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]*/gu) || []);
+    for(const ch of chars){
+      txt.data += ch;
+      if(!reduce) await new Promise(r=>setTimeout(r, 55));
+    }
+    if(!reduce) await new Promise(r=>setTimeout(r, 450));
+  }
+  caret.remove();
+  $("letter-sign").textContent = `จาก ${CONFIG.from}`;
+  $("letter-sign").style.transition = "opacity .6s"; $("letter-sign").style.opacity = 1;
+  $("to-ask").style.display = "inline-block";
+}
+$("to-ask").onclick = ()=>{ go("s-ask"); };
+
+/* report answer */
+let finalMsg = "";
+function report(result){
+  finalMsg = `พี่เล่นเกมจบแล้ว 💌\nคำตอบสุดท้าย: ${result}\n\n` + answers.join("\n");
+  if(CONFIG.notifyTopic){
+    fetch("https://ntfy.sh/" + CONFIG.notifyTopic, {method:"POST", body: finalMsg}).catch(()=>{});
+  }
+}
+
+/* ask */
+$("ask-q").textContent = CONFIG.askQuestion;
+$("yes").textContent = CONFIG.yesLabel;
+$("no").textContent = CONFIG.noLabel;
+let dodges = 0;
+function dodge(e){
+  if(dodges >= CONFIG.noDodges) return;
+  e.preventDefault(); e.stopPropagation();
+  dodges++;
+  const no = $("no");
+  no.style.left = (Math.random()*120 - 40) + "px";
+  no.style.top  = (Math.random()*60 - 20) + "px";
+  const yes = $("yes");
+  yes.style.transform = `scale(${1 + dodges*0.12})`;
+  yes.style.transformOrigin = "left center";
+  if(dodges >= CONFIG.noDodges){ no.style.left = "0"; no.style.top = "0"; }
+}
+$("no").addEventListener("click", e=>{
+  if(dodges < CONFIG.noDodges){ dodge(e); return; }
+  report(CONFIG.noLabel);
+  $("no-title").textContent = CONFIG.noTitle;
+  $("no-text").textContent = CONFIG.noText;
+  go("s-no");
+});
+$("yes").onclick = ()=>{
+  report(CONFIG.yesLabel);
+  $("yes-title").textContent = CONFIG.yesTitle;
+  $("yes-text").textContent = CONFIG.yesText;
+  go("s-yes");
+};
+</script>
+</body>
+</html>
